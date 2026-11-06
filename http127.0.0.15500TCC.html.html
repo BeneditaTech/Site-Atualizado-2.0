@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Benedita Tech</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+/* ============ BENEDITA TECH — CSS ============ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--roxo:#5A1ED6;--roxo-escuro:#3f11a0;--roxo-claro:#ede6fb;--bege:#F3E7D2;--bege-escuro:#e6d4b8;--marrom:#B8834E;--marrom-claro:#f5ebe0;--branco:#fff;--preto:#1a1a1a;--cinza:#6b6b6b;--verde:#2a7a4b;--shadow-card:4px 4px 0 var(--marrom);--shadow-hover:7px 7px 0 var(--marrom);--radius:16px;--radius-sm:10px}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background-color:var(--bege);background-image:radial-gradient(circle at 15% 50%,rgba(90,30,214,.06) 0,transparent 50%),radial-gradient(circle at 85% 20%,rgba(184,131,78,.08) 0,transparent 40%);color:var(--preto);min-height:100vh}
+.hidden{display:none!important}
+a.btn{text-decoration:none}
+/* Toast */
+#toast{position:fixed;bottom:28px;right:28px;background:var(--preto);color:#fff;padding:12px 22px;border-radius:50px;font-size:.88rem;font-weight:600;box-shadow:4px 4px 0 var(--marrom);border:2px solid var(--marrom);z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.toast-erro{background:#c0392b;border-color:#922b21}
+#toast.toast-sucesso{background:var(--verde);border-color:#1e5e38}
+/* Botões */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--bege);color:var(--roxo);border:2.5px solid var(--preto);outline:2px solid var(--preto);outline-offset:3px;border-radius:50px;padding:10px 24px;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer;transition:background-color .18s,color .18s,transform .12s,box-shadow .15s}
+.btn:hover{background:var(--roxo);color:#fff;outline-color:var(--roxo);transform:translateY(-2px)}
+.btn:disabled{opacity:.6;cursor:not-allowed;transform:none!important}
+.btn-sm{padding:7px 18px;font-size:.82rem}
+.btn-destaque{background:var(--roxo);color:#fff;border-color:var(--roxo);outline-color:var(--roxo);box-shadow:3px 3px 0 var(--preto)}
+.btn-destaque:hover{background:var(--roxo-escuro);border-color:var(--roxo-escuro);outline-color:var(--roxo-escuro);transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--preto)}
+.btn-header{background:#fff;color:var(--roxo);border-color:#fff;outline-color:rgba(255,255,255,.5);white-space:nowrap}
+.btn-header:hover{background:var(--preto);color:#fff;border-color:var(--preto);outline-color:var(--preto)}
+/* Inputs */
+.input-wrap{display:flex;flex-direction:column;gap:6px;width:100%}
+.input-label{font-size:.82rem;font-weight:700}
+.obrigatorio{color:var(--roxo);margin-left:2px}
+.input-base,.textarea-base{width:100%;background:#fff;border:2.5px solid var(--preto);border-radius:var(--radius-sm);padding:10px 14px;font-family:inherit;font-size:.9rem;color:var(--preto);outline:none;transition:border-color .18s,box-shadow .18s}
+.textarea-base{resize:vertical;min-height:90px}
+.input-base:focus,.textarea-base:focus{border-color:var(--roxo);box-shadow:0 0 0 3px rgba(90,30,214,.15)}
+select.input-base{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235A1ED6' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;cursor:pointer}
+/* Spinner */
+.spinner{width:36px;height:36px;border:3px solid var(--bege-escuro);border-top-color:var(--roxo);border-radius:50%;animation:spin-a .7s linear infinite;margin:40px auto}
+@keyframes spin-a{to{transform:rotate(360deg)}}
+.feed-loading{text-align:center;padding:40px 20px;color:var(--cinza);font-size:.9rem}
+/* Landing */
+#landingPage{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1.5rem}
+.landing-container{max-width:1300px;width:100%;background:rgba(255,255,255,.4);backdrop-filter:blur(2px);border-radius:48px;padding:1rem;box-shadow:0 20px 35px -12px rgba(0,0,0,.2)}
+.landing-card{background:#fff;border-radius:40px;overflow:hidden;box-shadow:8px 8px 0 var(--marrom);border:2px solid var(--preto)}
+.hero-landing{background:linear-gradient(125deg,#3f0fa0 0%,var(--roxo) 45%,#a36eff 100%);padding:3rem 2.5rem 4rem;text-align:center;position:relative;border-bottom:3px solid var(--preto);overflow:hidden}
+.hero-landing::before{content:"✨";font-size:110px;position:absolute;bottom:-30px;right:20px;opacity:.15;pointer-events:none;transform:rotate(10deg)}
+.hero-landing::after{content:"📚";font-size:95px;position:absolute;top:20px;left:25px;opacity:.12;pointer-events:none}
+.logo-landing{display:inline-flex;align-items:center;gap:12px;background:rgba(255,255,255,.12);backdrop-filter:blur(6px);padding:8px 24px;border-radius:100px;border:1px solid rgba(255,255,255,.3);margin-bottom:2rem}
+.logo-icon-land{font-size:2rem;animation:float 3s ease infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.logo-landing h2{font-family:'Playfair Display',serif;font-size:1.9rem;color:#fff}
+.hero-landing h1{font-family:'Playfair Display',serif;font-size:clamp(2.4rem,6vw,4rem);color:#fff;line-height:1.2;margin-bottom:1.2rem}
+.hero-landing h1 em{font-style:italic;color:#fdd67a;font-weight:400}
+.hero-landing p{font-size:1.1rem;max-width:600px;margin:0 auto 1.8rem;color:rgba(255,255,255,.85)}
+.btn-entrar{background:var(--bege);border:3px solid var(--preto);outline:3px solid var(--preto);outline-offset:4px;border-radius:60px;padding:14px 38px;font-family:inherit;font-weight:800;font-size:1.2rem;color:var(--roxo);cursor:pointer;transition:.2s;box-shadow:6px 6px 0 var(--preto);display:inline-flex;align-items:center;gap:12px}
+.btn-entrar:hover{background:var(--roxo);color:#fff;transform:translate(-3px,-3px);box-shadow:10px 10px 0 var(--preto)}
+.features-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:2rem;padding:3rem 2rem;background:#fff}
+.feature-item{flex:1;min-width:180px;background:var(--bege);border-radius:28px;padding:1.5rem 1rem;text-align:center;border:2px solid var(--preto);box-shadow:5px 5px 0 var(--marrom);transition:all .2s}
+.feature-item:hover{transform:translateY(-6px);box-shadow:8px 8px 0 var(--marrom)}
+.feature-icon{font-size:2.3rem;width:65px;height:65px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;border-radius:30px;background:var(--roxo);color:#fff;border:2px solid var(--preto)}
+.feature-item h3{font-family:'Playfair Display',serif;font-size:1.3rem;margin-bottom:.4rem;color:var(--roxo)}
+.feature-item p{font-size:.85rem;color:#444}
+.testimonials{background:var(--bege-escuro);padding:2.5rem 2rem;text-align:center;border-top:2px solid var(--marrom)}
+.testimonials h3{font-family:'Playfair Display',serif;font-size:1.8rem;margin-bottom:1.2rem}
+.quote{font-style:italic;max-width:550px;margin:.6rem auto;color:#2c2c2c;font-weight:500}
+.footer-landing{background:var(--preto);color:#aaa;text-align:center;padding:1.2rem;font-size:.8rem}
+/* Plataforma */
+#platformPage{display:none;flex-direction:column;min-height:100vh}
+#platformPage.visible{display:flex}
+#platformPage header{background:linear-gradient(135deg,var(--roxo) 0%,#7b3fe4 100%);display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 40px;flex-wrap:wrap;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(90,30,214,.3)}
+.logo{display:flex;align-items:center;gap:8px;cursor:pointer}
+.logo-icon{color:var(--marrom);font-size:1.3rem;animation:spin-a 8s linear infinite}
+.logo h1{font-family:'Playfair Display',serif;font-size:1.45rem;color:#fff}
+.header-actions{display:flex;align-items:center;gap:10px;flex:1;justify-content:flex-end;flex-wrap:wrap}
+.search-wrap{position:relative;display:flex;align-items:center}
+.search-icon{position:absolute;left:12px;pointer-events:none;font-size:.9rem}
+#searchInput{background:rgba(255,255,255,.95);border:2px solid transparent;border-radius:50px;padding:8px 18px 8px 36px;font-family:inherit;font-size:.88rem;width:280px;transition:all .2s}
+#searchInput:focus{outline:none;border-color:var(--marrom);width:320px;box-shadow:0 0 0 3px rgba(184,131,78,.2)}
+.hero{background:linear-gradient(135deg,#3a0fa8 0%,var(--roxo) 50%,#8b47e8 100%);padding:52px 40px 48px;display:flex;align-items:center;justify-content:space-between;gap:40px;flex-wrap:wrap;overflow:hidden}
+.hero-content{max-width:500px}
+.hero-eyebrow{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 14px;border-radius:50px;margin-bottom:18px}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,3rem);color:#fff;line-height:1.15;margin-bottom:16px}
+.hero-title em{font-style:italic;font-weight:400;color:#f0c87a}
+.hero-sub{font-size:.95rem;color:rgba(255,255,255,.75);line-height:1.65;max-width:420px}
+.hero-stats{display:flex;gap:28px;flex-wrap:wrap}
+.stat{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(8px);border-radius:var(--radius);padding:18px 24px;text-align:center;min-width:100px;transition:transform .2s}
+.stat:hover{transform:translateY(-4px)}
+.stat-num{display:block;font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:700;color:#f0c87a}
+.stat-label{display:block;font-size:.74rem;color:rgba(255,255,255,.7);margin-top:2px}
+.view{padding:36px 40px;flex:1;max-width:1280px;width:100%;margin:0 auto}
+#viewFeed{display:grid;grid-template-columns:280px 1fr;gap:32px;align-items:start}
+/* Sidebar */
+.sidebar{display:flex;flex-direction:column;gap:20px;position:sticky;top:72px}
+.sidebar>section{background:#fff;border:2.5px solid var(--preto);border-radius:var(--radius);padding:22px 20px}
+.perfil-card{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.avatar-wrap{position:relative;display:inline-block}
+.avatar{width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,var(--roxo),#8b47e8);color:#fff;font-family:'Playfair Display',serif;font-size:2.1rem;font-weight:700;display:flex;align-items:center;justify-content:center;border:3px solid var(--preto);box-shadow:3px 3px 0 var(--marrom);overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.avatar-badge{position:absolute;bottom:3px;right:3px;width:14px;height:14px;border-radius:50%;background:#22c55e;border:2px solid #fff}
+.perfil-card h2{font-family:'Playfair Display',serif;font-size:1.2rem}
+.usuario-email{font-size:.76rem;color:var(--cinza);word-break:break-all}
+.perfil-selos{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:50px;padding:3px 11px;font-size:.74rem;font-weight:700;border:1.5px solid var(--roxo);background:var(--roxo-claro);color:var(--roxo)}
+.guest-aviso{background:var(--roxo-claro)!important;border:2px dashed var(--roxo)!important;text-align:center;font-size:.84rem;color:var(--roxo);line-height:1.5}
+.guest-aviso strong{display:block;margin-bottom:6px;font-size:.9rem}
+.guest-aviso .btn{width:100%;margin-top:10px}
+/* Tags picker */
+.tags-picker{display:flex;flex-wrap:wrap;gap:6px;padding:12px;background:var(--bege);border:2px solid var(--bege-escuro);border-radius:var(--radius-sm);max-height:150px;overflow-y:auto}
+.tag-opcao{padding:5px 13px;border-radius:50px;cursor:pointer;border:2px solid var(--bege-escuro);background:#fff;font-family:inherit;font-size:.8rem;font-weight:600;color:var(--cinza);transition:all .15s}
+.tag-opcao:hover{border-color:var(--roxo);color:var(--roxo);background:var(--roxo-claro)}
+.tag-opcao.selecionada{background:var(--roxo);border-color:var(--roxo);color:#fff;box-shadow:2px 2px 0 var(--preto)}
+.tags-selecionadas{display:flex;flex-wrap:wrap;gap:5px;min-height:28px;padding:6px 0;border-top:1.5px dashed var(--bege-escuro);margin-top:6px;align-items:center}
+.tags-placeholder{font-size:.78rem;color:#bbb;font-style:italic}
+.tag-pill{display:inline-flex;align-items:center;gap:4px;background:var(--roxo-claro);color:var(--roxo);border:1.5px solid var(--roxo);border-radius:50px;padding:3px 10px;font-size:.78rem;font-weight:700}
+.tag-pill button{background:none;border:none;cursor:pointer;color:var(--roxo);font-size:.9rem;opacity:.7}
+/* Feed */
+.feed-artigos{display:flex;flex-direction:column;gap:22px}
+.feed-titulo{font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:4px}
+#articlesContainer{display:flex;flex-direction:column;gap:22px}
+.artigo{background:#fff;border:2.5px solid var(--preto);border-radius:var(--radius);padding:26px 28px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow-card);transition:transform .18s,box-shadow .18s;animation:slideUp .45s ease both}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.artigo:hover{transform:translate(-3px,-3px);box-shadow:var(--shadow-hover)}
+.artigo-destaque{border-color:var(--roxo);background:linear-gradient(160deg,#faf7ff 0%,#fff 100%)}
+.artigo-expandido{border-color:var(--roxo)}
+.artigo-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.artigo-autor{display:flex;align-items:center;gap:10px}
+.mini-avatar{width:36px;height:36px;border-radius:50%;background:var(--roxo);color:#fff;font-size:.88rem;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--preto);flex-shrink:0;overflow:hidden}
+.mini-avatar img{width:100%;height:100%;object-fit:cover}
+.autor-nome{display:block;font-size:.85rem;font-weight:700}
+.artigo-data{display:block;font-size:.72rem;color:var(--cinza)}
+.artigo-materia{background:var(--roxo-claro);color:var(--roxo);border-radius:50px;padding:4px 12px;font-size:.74rem;font-weight:700;white-space:nowrap}
+.artigo-titulo{font-family:'Playfair Display',serif;font-size:1.22rem;line-height:1.3}
+.artigo-descricao{font-size:.9rem;color:#555;line-height:1.65}
+.artigo-conteudo{background:var(--bege);border-radius:var(--radius-sm);padding:16px;font-size:.9rem;color:#333;line-height:1.75;white-space:pre-wrap;border-left:4px solid var(--roxo);animation:slideUp .25s ease}
+.tags{list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+.tag{background:var(--bege);border:1.5px solid var(--bege-escuro);border-radius:50px;padding:3px 11px;font-family:inherit;font-size:.76rem;font-weight:600;color:var(--cinza);cursor:pointer;transition:all .15s}
+.tag:hover{background:var(--roxo-claro);border-color:var(--roxo);color:var(--roxo)}
+.artigo-footer{display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1.5px solid var(--bege-escuro);flex-wrap:wrap;gap:10px}
+.artigo-meta{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.btn-like,.btn-comentar{background:none;border:2px solid var(--bege-escuro);border-radius:50px;padding:5px 12px;font-family:inherit;font-size:.82rem;font-weight:700;color:var(--cinza);cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .18s}
+.btn-like:hover,.btn-comentar:hover{border-color:var(--roxo);color:var(--roxo)}
+.btn-like.curtido{border-color:#e74c3c;color:#e74c3c;background:#fff5f5}
+/* Modais */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:500;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border:2.5px solid var(--preto);border-radius:28px;padding:32px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;box-shadow:10px 10px 0 var(--marrom);animation:slideUp .3s ease;display:flex;flex-direction:column;gap:16px}
+.modal-login{max-width:420px}
+.modal-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.modal-header h2{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--roxo)}
+.modal-close{background:none;border:none;cursor:pointer;font-size:1.4rem;color:var(--cinza)}
+.modal-close:hover{color:var(--preto)}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.modal-full{grid-column:1/-1}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;padding-top:8px;border-top:1.5px solid var(--bege-escuro);margin-top:14px}
+.btn-google{width:100%;background:#fff;color:var(--preto);border:2.5px solid var(--preto);outline:2px solid var(--preto);outline-offset:3px;border-radius:50px;padding:11px 20px;font-family:inherit;font-size:.95rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .18s;box-shadow:3px 3px 0 var(--preto)}
+.btn-google:hover{background:var(--preto);color:#fff;transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--marrom)}
+.divisor-login{display:flex;align-items:center;gap:10px;color:var(--cinza);font-size:.8rem;font-weight:600}
+.divisor-login::before,.divisor-login::after{content:'';flex:1;height:1.5px;background:var(--bege-escuro)}
+.erro-login{background:#fff0f0;color:#c0392b;border:1.5px solid #e74c3c;border-radius:var(--radius-sm);padding:9px 14px;font-size:.82rem;font-weight:600}
+.link-btn{background:none;border:none;cursor:pointer;color:var(--roxo);font-weight:700;font-size:inherit;text-decoration:underline}
+.comentario-item{display:flex;gap:10px;align-items:flex-start}
+.comentario-corpo{flex:1;background:var(--bege);border-radius:var(--radius-sm);padding:10px 12px;border:1.5px solid var(--bege-escuro)}
+.comentario-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.comentario-meta strong{font-size:.83rem}
+.comentario-meta span{font-size:.72rem;color:var(--cinza)}
+.comentario-corpo>p{font-size:.85rem;color:#444;line-height:1.55}
+.comentario-input-wrap{display:flex;gap:8px;align-items:center}
+.comentario-input{flex:1;padding:8px 12px!important;font-size:.85rem!important}
+.sem-comentarios,.aviso-login-comentario{font-size:.85rem;color:var(--cinza);text-align:center;padding:16px 0}
+/* Perfil */
+.card-bege{background:var(--bege);border:2.5px solid var(--preto);border-radius:20px;padding:28px;margin-bottom:24px;box-shadow:var(--shadow-card)}
+.perfil-topo{display:flex;align-items:center;gap:20px}
+.perfil-topo .avatar{width:92px;height:92px;font-size:2.4rem}
+.perfil-topo h1{font-family:'Playfair Display',serif;font-size:1.7rem;margin-bottom:6px}
+.perfil-topo p{color:var(--cinza);font-size:.95rem}
+.perfil-secao{border-top:1.5px solid var(--preto);padding-top:22px;margin-top:22px}
+.perfil-secao h2,.card-bege>h2{font-size:1.15rem;margin-bottom:15px}
+.selos{display:flex;flex-wrap:wrap;gap:12px}
+.selo{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;background:var(--roxo-claro);color:var(--roxo-escuro);font-size:1.05rem;font-weight:700;border:1.5px solid var(--roxo)}
+.selo-vazio,.aviso{color:var(--cinza);font-size:1rem}
+.aviso{text-align:center;padding:18px}
+.artigos-perfil{display:grid;gap:12px}
+.artigo-p{border:1.5px solid var(--preto);border-radius:13px;padding:16px;background:#fcfbff}
+.artigo-p-topo{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px}
+.artigo-p h3{font-size:1.05rem}
+.artigo-p p{color:var(--cinza);font-size:.9rem;line-height:1.5}
+.artigo-p-meta{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:.8rem;color:var(--cinza);align-items:center}
+.btn-excluir{margin-left:auto;background:none;border:1.5px solid #e74c3c;color:#e74c3c;border-radius:50px;padding:4px 12px;font-size:.78rem;font-weight:700;cursor:pointer}
+.btn-excluir:hover{background:#e74c3c;color:#fff}
+#notesTextarea{width:100%;min-height:170px;resize:vertical;border:1.5px solid var(--preto);border-radius:13px;padding:14px;font:inherit;background:#fcfbff;outline:none}
+#notesTextarea:focus{border-color:var(--roxo);box-shadow:0 0 0 3px var(--roxo-claro)}
+.acoes{display:flex;justify-content:flex-end;margin-top:12px}
+.selos-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.selo-opcao{position:relative}
+.selo-opcao input{position:absolute;opacity:0;pointer-events:none}
+.selo-opcao label{min-height:110px;border:2px solid var(--preto);border-radius:14px;background:#fcfbff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:12px;cursor:pointer;transition:.2s}
+.selo-opcao label:hover{border-color:var(--roxo);transform:translateY(-1px)}
+.selo-opcao input:checked+label{border-color:var(--roxo);background:var(--roxo-claro);color:var(--roxo-escuro);box-shadow:0 0 0 3px rgba(124,58,237,.12)}
+.selo-icone{font-size:2.2rem}
+.selo-nome{font-size:1.05rem;font-weight:700}
+/* Footer */
+#platformPage footer{background:var(--preto);color:#fff;text-align:center;padding:20px 40px;font-size:.85rem;margin-top:auto}
+#platformPage footer a{color:#fff}
+@media(max-width:900px){
+#viewFeed{grid-template-columns:1fr}.view{padding:20px 16px}.sidebar{position:static}
+#platformPage header{padding:12px 16px}#searchInput{width:160px}.hero{padding:32px 16px}.hero-stats{gap:12px}
+.modal-grid{grid-template-columns:1fr}.artigo{padding:18px 16px}.perfil-topo .avatar{width:72px;height:72px}}
+</style>
+</head>
+<body>
+
+<div id="toast" role="alert" aria-live="polite"></div>
+
+<!-- ═══════════ LANDING ═══════════ -->
+<div id="landingPage">
+ <div class="landing-container"><div class="landing-card">
+  <div class="hero-landing">
+   <div class="logo-landing"><span class="logo-icon-land">⚡</span><h2>Benedita Tech</h2></div>
+   <h1>Estude, compartilhe e <em>transforme</em><br>o seu futuro</h1>
+   <p>Uma comunidade vibrante onde estudantes publicam resumos, artigos e se ajudam a conquistar notas incríveis.</p>
+   <button id="enterPlatformBtn" class="btn-entrar">🚀 Explorar plataforma →</button>
+  </div>
+  <div class="features-grid">
+   <div class="feature-item"><div class="feature-icon">📘</div><h3><span id="statLandingArtigos">0</span> Artigos</h3><p>Conteúdo colaborativo de estudantes para estudantes.</p></div>
+   <div class="feature-item"><div class="feature-icon">🏆</div><h3>Rankings &amp; Metas</h3><p>Acompanhe seu progresso e incentive colegas.</p></div>
+   <div class="feature-item"><div class="feature-icon">💬</div><h3>Comunidade Ativa</h3><p>Comentários, dicas e suporte em todas as matérias.</p></div>
+  </div>
+  <div class="testimonials">
+   <h3>💜 O que dizem por aqui</h3>
+   <p class="quote">"A Benedita Tech me ajudou a passar no vestibular com resumos incríveis de matemática!" — Marina R.</p>
+   <p class="quote">"Publiquei meus resumos de história e recebi feedbacks que me fizeram evoluir demais." — João P.</p>
+  </div>
+  <div class="footer-landing"><p>© 2026 Benedita Tech — conhecimento livre e colaborativo</p></div>
+ </div></div>
+</div>
+
+<!-- ═══════════ PLATAFORMA ═══════════ -->
+<div id="platformPage">
+ <header>
+  <div class="logo" id="logoHome"><span class="logo-icon" aria-hidden="true">✦</span><h1>Benedita Tech</h1></div>
+  <div class="header-actions">
+   <div class="search-wrap"><span class="search-icon">🔍</span><input type="search" id="searchInput" placeholder="Buscar artigos, matérias, tags…" aria-label="Buscar artigos"></div>
+   <button class="btn btn-header btn-sm" id="btnInicio" style="display:none">🏠 Início</button>
+   <button class="btn btn-header btn-sm" id="btnPerfil" style="display:none">👤 Meu perfil</button>
+   <button class="btn btn-header btn-sm" id="publishBtn" style="display:none">+ Publicar</button>
+   <button class="btn btn-header btn-sm" id="btnHeaderLogin">Entrar</button>
+   <button class="btn btn-header btn-sm" id="btnHeaderLogout" style="display:none">Sair</button>
+  </div>
+ </header>
+
+ <section class="hero" id="heroSection">
+  <div class="hero-content">
+   <span class="hero-eyebrow">Plataforma de Estudos</span>
+   <h2 class="hero-title">Aprenda e compartilhe<br><em>conhecimento</em> com todos</h2>
+   <p class="hero-sub">Uma comunidade colaborativa onde estudantes publicam resumos, dicas e artigos.</p>
+  </div>
+  <div class="hero-stats">
+   <div class="stat"><span class="stat-num" id="statArtigos">…</span><span class="stat-label">Artigos</span></div>
+   <div class="stat"><span class="stat-num" id="statAutores">…</span><span class="stat-label">Autores</span></div>
+   <div class="stat"><span class="stat-num" id="statLeituras">…</span><span class="stat-label">Leituras</span></div>
+  </div>
+ </section>
+
+ <!-- VIEW: FEED -->
+ <main class="view" id="viewFeed">
+  <aside class="sidebar">
+   <section id="secaoPerfil" class="perfil-card hidden">
+    <div class="avatar-wrap"><div class="avatar" id="avatarSide">?</div><span class="avatar-badge" title="Online"></span></div>
+    <div><h2 id="sideNome">—</h2><span class="usuario-email" id="sideEmail">—</span></div>
+    <div class="perfil-selos" id="sideSelos"></div>
+    <button class="btn btn-destaque btn-sm" id="btnVerPerfil" style="width:100%">Ver meu perfil</button>
+   </section>
+   <section id="secaoGuestAviso" class="guest-aviso">
+    <strong>👋 Bem-vinda!</strong>
+    Entre na sua conta para publicar artigos, curtir e comentar.
+    <button class="btn btn-destaque btn-sm" id="btnGuestLogin">Entrar / Criar conta</button>
+   </section>
+  </aside>
+  <section class="feed-artigos">
+   <h2 class="feed-titulo">Artigos Recentes</h2>
+   <div id="articlesContainer"><div class="feed-loading"><div class="spinner"></div><p>Carregando artigos…</p></div></div>
+  </section>
+ </main>
+
+ <!-- VIEW: PERFIL -->
+ <main class="view hidden" id="viewPerfil">
+  <section class="card-bege">
+   <div class="perfil-topo">
+    <div class="avatar" id="avatarPerfil">?</div>
+    <div><h1 id="perfilNome">Carregando…</h1><p id="perfilEmail"></p></div>
+   </div>
+   <div class="perfil-secao"><h2>🏷️ Meus selos</h2><div class="selos" id="perfilSelos"></div></div>
+   <div class="perfil-secao"><h2>📝 Meus artigos</h2><div class="artigos-perfil" id="perfilArtigos"></div></div>
+   <div class="perfil-secao">
+    <h2>📒 Minhas anotações</h2>
+    <textarea id="notesTextarea" placeholder="Escreva aqui seus resumos rápidos, ideias de artigos, dúvidas para pesquisar…"></textarea>
+    <div class="acoes"><button class="btn btn-destaque btn-sm" id="saveNotesBtn">💾 Salvar anotações</button></div>
+   </div>
+  </section>
+  <section class="card-bege" id="secaoSelos">
+   <h2>🏷️ Selos de matérias</h2>
+   <p style="color:var(--cinza);margin-bottom:20px">Escolha as matérias que você estuda. Elas aparecem no seu perfil.</p>
+   <div class="selos-grid" id="selosGrid"></div>
+   <div class="acoes"><button class="btn btn-destaque btn-sm" id="btnSalvarSelos">💾 Salvar selos</button></div>
+  </section>
+ </main>
+
+ <footer><p>© 2026 Benedita Tech — Feito com 💜 para estudantes.</p></footer>
+</div>
+
+<!-- ═══════════ MODAL LOGIN ═══════════ -->
+<div id="modalLoginOverlay" class="modal-overlay">
+ <div class="modal modal-login">
+  <div class="modal-header"><h2 id="loginTituloTexto">👋 Entrar na conta</h2><button class="modal-close" id="modalLoginClose">✕</button></div>
+  <button class="btn-google" id="btnLoginGoogle">
+   <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+   Continuar com Google
+  </button>
+  <div class="divisor-login">ou</div>
+  <div id="loginErro" class="erro-login hidden"></div>
+  <form id="formLogin" novalidate style="display:flex;flex-direction:column;gap:12px">
+   <div class="input-wrap"><label class="input-label" for="loginEmail">E-mail <span class="obrigatorio">*</span></label><input id="loginEmail" type="email" class="input-base" placeholder="seu@email.com" required></div>
+   <div class="input-wrap"><label class="input-label" for="loginSenha">Senha <span class="obrigatorio">*</span></label><input id="loginSenha" type="password" class="input-base" placeholder="Mínimo 6 caracteres" required></div>
+   <button type="submit" class="btn btn-destaque" style="width:100%"><span id="loginBtnTexto">Entrar</span></button>
+  </form>
+  <p style="text-align:center;font-size:.83rem"><button class="link-btn" id="toggleModoLogin">Criar conta</button></p>
+ </div>
+</div>
+
+<!-- ═══════════ MODAL PUBLICAR ═══════════ -->
+<div id="modalOverlay" class="modal-overlay">
+ <div class="modal">
+  <div class="modal-header"><h2>✍️ Publicar Artigo</h2><button class="modal-close" id="modalClose">✕</button></div>
+  <p style="font-size:.85rem;color:var(--cinza)">Seu artigo vai direto para o feed e para o banco de dados.</p>
+  <form id="formPublicar" novalidate>
+   <div class="modal-grid">
+    <div class="input-wrap modal-full"><label class="input-label" for="inputTitulo">Título <span class="obrigatorio">*</span></label><input id="inputTitulo" type="text" class="input-base" placeholder="Ex: Guia completo de funções do 2º grau" maxlength="120"></div>
+    <div class="input-wrap"><label class="input-label" for="inputMateria">Matéria <span class="obrigatorio">*</span></label><select id="inputMateria" class="input-base"><option value="">Selecione…</option></select></div>
+    <div class="input-wrap"><label class="input-label" for="inputAutor">Seu nome</label><input id="inputAutor" type="text" class="input-base" placeholder="Ex: Ana Souza"></div>
+    <div class="input-wrap modal-full"><label class="input-label" for="inputDescricao">Resumo <span class="obrigatorio">*</span></label><textarea id="inputDescricao" class="textarea-base" placeholder="Escreva o resumo aqui…" rows="3"></textarea></div>
+    <div class="input-wrap modal-full"><label class="input-label" for="inputConteudo">Conteúdo completo</label><textarea id="inputConteudo" class="textarea-base" placeholder="Conteúdo que aparece ao clicar em 'Ler artigo'…" rows="6"></textarea></div>
+    <div class="input-wrap modal-full">
+     <label class="input-label">Tags <span style="font-weight:400;color:var(--cinza)">(clique para adicionar)</span></label>
+     <div class="tags-picker" id="tagsPicker"></div>
+     <div class="tags-selecionadas" id="tagsSelecionadas"></div>
+    </div>
+   </div>
+   <div class="modal-footer">
+    <button type="button" class="btn btn-sm" id="btnCancelar">Cancelar</button>
+    <button type="submit" class="btn btn-destaque btn-sm" id="btnPublicarSubmit">🚀 Publicar agora</button>
+   </div>
+  </form>
+ </div>
+</div>
+
+<!-- ═══════════ MODAL COMENTÁRIOS ═══════════ -->
+<div id="modalComentarioOverlay" class="modal-overlay">
+ <div class="modal">
+  <div class="modal-header"><h2>💬 Comentários</h2><button class="modal-close" id="modalComentarioClose">✕</button></div>
+  <p id="modalComentarioTituloArtigo" style="font-size:.85rem;color:var(--cinza);font-style:italic;border-left:3px solid var(--roxo);padding-left:10px"></p>
+  <div id="modalComentariosLista" style="display:flex;flex-direction:column;gap:10px;max-height:340px;overflow-y:auto;padding-right:4px"></div>
+  <div id="modalComentarioForm"></div>
+ </div>
+</div>
+
+<script>
+/* ============ BENEDITA TECH — JS ============ */
+const FIREBASE_CONFIG = {
+  apiKey:"AIzaSyAMDzDLNo3_RZWnue_mDMy9rtc8bcb9OxM", authDomain:"plataformatech.firebaseapp.com",
+  projectId:"plataformatech", storageBucket:"plataformatech.firebasestorage.app",
+  messagingSenderId:"256905261473", appId:"1:256905261473:web:6eb3d374d721c476899be0"
+};
+const $ = id => document.getElementById(id);
+
+// Selos do perfil (nome salvo no banco)
+const SELOS = [['Matemática','📐'],['Português','📖'],['Ciências','🔬'],['História','🏛️'],['Geografia','🌎'],['Física','⚛️'],['Química','🧪'],['Biologia','🧬'],['Inglês','🇬🇧'],['Filosofia','💭'],['Sociologia','👥'],['Técnico','💻'],['Itinerário Humanas','📚'],['Itinerário Exatas','🧮']];
+const iconeDe = n => (SELOS.find(s => s[0] === n) || [])[1] || '🏷️';
+const MATERIAS = SELOS.map(s => s[0]);
+const TAGS = ['ENEM','Vestibular','Revisão','Resumo','Exercícios','Macetes','Fórmulas','Conceitos','Prova','Dicas','Exemplos','Passo a passo','Redação','Gramática','Literatura','Interpretação','Cálculo','Álgebra','Geometria','Trigonometria','Estatística','Orgânica','Inorgânica','Físico-Química','Genética','Ecologia','Evolução','Citologia','Botânica','Contemporânea','Antiga','Medieval','Brasil','Mundo','Cartografia','Geopolítica','Climatologia','Urbanização','Programação','Dados','IA'];
+const CORES = ['#5A1ED6','#b8834e','#2a7a4b','#e74c3c','#2980b9','#8e44ad'];
+
+let db = null, auth = null, firebaseReady = false, usuarioAtual = null;
+let todosArtigos = [], curtidas = new Set(), artigoComentandoId = null, tagsSel = new Set();
+const leiturasSessao = new Set();
+
+// ── Utilidades ──
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmt = n => n >= 1000 ? (n/1000).toFixed(1).replace('.0','') + 'k' : String(n);
+function toast(msg, tipo) {
+  const t = $('toast'); t.textContent = msg;
+  t.className = 'show' + (tipo === 'erro' ? ' toast-erro' : tipo === 'sucesso' ? ' toast-sucesso' : '');
+  clearTimeout(window._tt); window._tt = setTimeout(() => t.className = '', tipo === 'erro' ? 6000 : 3200);
+}
+function formatarData(ts) {
+  if (!ts) return 'Agora';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return isNaN(d) ? 'Recente' : d.toLocaleDateString('pt-BR', {day:'2-digit', month:'short', year:'numeric'});
+}
+const avatarHTML = (nome, foto) => foto ? `<img src="${esc(foto)}" alt="foto" referrerpolicy="no-referrer">` : esc((nome||'?')[0].toUpperCase());
+
+// ── Erros do Firebase (mostra o motivo real na tela e no console F12) ──
+function erroFirebase(e, onde) {
+  console.error('[Firebase] ' + onde + ':', e);
+  const m = {
+    'permission-denied':'Sem permissão no Firestore. Ajuste as regras no Firebase Console',
+    'unavailable':'Firebase indisponível. Verifique a internet',
+    'failed-precondition':'Falta um índice no Firestore (veja o link no console F12)',
+    'unauthenticated':'Você precisa estar logada',
+    'auth/unauthorized-domain':'Domínio não autorizado. Adicione em Authentication > Settings > Domínios autorizados',
+    'auth/operation-not-allowed':'Ative esse método em Authentication > Sign-in method',
+    'auth/popup-blocked':'O navegador bloqueou o popup do Google',
+    'auth/popup-closed-by-user':'Login cancelado',
+    'auth/network-request-failed':'Falha de rede',
+    'auth/too-many-requests':'Muitas tentativas, aguarde um pouco',
+    'auth/api-key-not-valid.-please-pass-a-valid-api-key.':'Chave de API inválida'
+  };
+  const msg = m[e?.code] || e?.message || 'erro desconhecido';
+  toast(onde + ': ' + msg, 'erro');
+  return msg;
+}
+
+// ── Boot ──
+document.addEventListener('DOMContentLoaded', () => {
+  montarSelosGrid(); montarSelectMateria();
+  inicializarFirebase(); configurarEventos();
+  carregarEstatisticas();
+  if (location.hash === '#perfil') entrarPlataforma('perfil');
+});
+
+function inicializarFirebase() {
+  try {
+    if (typeof firebase === 'undefined') throw new Error('Scripts do Firebase não carregaram (internet/bloqueador de anúncios?)');
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore(); auth = firebase.auth(); firebaseReady = true;
+    auth.onAuthStateChanged(user => {
+      usuarioAtual = user; atualizarUIAuth();
+      if (user) { carregarCurtidasUsuario(); carregarPerfil(); }
+      else if (location.hash === '#perfil') mostrarView('feed');
+    });
+  } catch (e) { erroFirebase(e, 'Firebase offline'); firebaseReady = false; atualizarUIAuth(); }
+}
+
+// ── Navegação ──
+function entrarPlataforma(view) {
+  $('landingPage').style.display = 'none';
+  $('platformPage').classList.add('visible');
+  document.body.style.backgroundImage = 'none';
+  if (!todosArtigos.length) carregarArtigos();
+  mostrarView(view || 'feed');
+}
+function mostrarView(v) {
+  if (v === 'perfil' && !usuarioAtual && firebaseReady) {
+    // aguarda o Firebase restaurar a sessão; se não houver usuário, volta ao feed
+    if (auth.currentUser === null && !window._authChecked) { return; }
+    toast('Entre na sua conta para ver o perfil', 'erro'); v = 'feed';
+  }
+  const perfil = v === 'perfil';
+  $('viewFeed').classList.toggle('hidden', perfil);
+  $('viewPerfil').classList.toggle('hidden', !perfil);
+  $('heroSection').classList.toggle('hidden', perfil);
+  $('btnInicio').style.display = perfil ? 'inline-flex' : 'none';
+  $('btnPerfil').style.display = (!perfil && usuarioAtual) ? 'inline-flex' : 'none';
+  $('searchInput').parentElement.style.display = perfil ? 'none' : 'flex';
+  try { history.replaceState(null, '', perfil ? '#perfil' : location.pathname); } catch (e) { /* ambientes em iframe (ex.: preview) bloqueiam */ }
+  window.scrollTo({top:0});
+  if (perfil) carregarPerfil();
+}
+
+// ── Auth UI ──
+function atualizarUIAuth() {
+  window._authChecked = true;
+  const logado = !!usuarioAtual, perfilAberto = !$('viewPerfil').classList.contains('hidden');
+  $('secaoPerfil').classList.toggle('hidden', !logado);
+  $('secaoGuestAviso').classList.toggle('hidden', logado);
+  $('publishBtn').style.display = logado ? 'inline-flex' : 'none';
+  $('btnPerfil').style.display = (logado && !perfilAberto) ? 'inline-flex' : 'none';
+  $('btnHeaderLogin').style.display = logado ? 'none' : 'inline-flex';
+  $('btnHeaderLogout').style.display = logado ? 'inline-flex' : 'none';
+  if (logado) {
+    const nome = usuarioAtual.displayName || usuarioAtual.email?.split('@')[0] || 'Usuário';
+    $('sideNome').textContent = nome; $('sideEmail').textContent = usuarioAtual.email || '';
+    $('avatarSide').innerHTML = avatarHTML(nome, usuarioAtual.photoURL);
+    $('inputAutor').value = nome;
+  }
+  if (location.hash === '#perfil' && !$('platformPage').classList.contains('visible')) entrarPlataforma('perfil');
+  else if (location.hash === '#perfil' && !perfilAberto && logado) mostrarView('perfil');
+}
+
+// ── Eventos ──
+function configurarEventos() {
+  $('enterPlatformBtn').onclick = () => entrarPlataforma('feed');
+  $('logoHome').onclick = () => mostrarView('feed');
+  $('btnInicio').onclick = () => mostrarView('feed');
+  $('btnPerfil').onclick = () => mostrarView('perfil');
+  $('btnVerPerfil').onclick = () => mostrarView('perfil');
+  $('btnGuestLogin').onclick = abrirModalLogin;
+  $('btnHeaderLogin').onclick = abrirModalLogin;
+  $('btnHeaderLogout').onclick = logout;
+  $('btnLoginGoogle').onclick = loginComGoogle;
+  $('formLogin').onsubmit = loginComEmail;
+  $('modalLoginClose').onclick = fecharModalLogin;
+  $('modalLoginOverlay').onclick = e => { if (e.target.id === 'modalLoginOverlay') fecharModalLogin(); };
+  $('toggleModoLogin').onclick = () => {
+    window._cadastro = !window._cadastro; const c = window._cadastro;
+    $('loginBtnTexto').textContent = c ? 'Criar conta' : 'Entrar';
+    $('loginTituloTexto').textContent = c ? '✨ Criar conta' : '👋 Entrar na conta';
+    $('toggleModoLogin').textContent = c ? 'Já tenho conta' : 'Criar conta';
+    $('loginErro').classList.add('hidden');
+  };
+  $('searchInput').oninput = renderizarArtigos;
+  $('publishBtn').onclick = () => { if (!usuarioAtual && firebaseReady) return abrirModalLogin(); abrirModalPublicar(); };
+  $('modalClose').onclick = fecharModalPublicar; $('btnCancelar').onclick = fecharModalPublicar;
+  $('modalOverlay').onclick = e => { if (e.target.id === 'modalOverlay') fecharModalPublicar(); };
+  $('formPublicar').onsubmit = publicarArtigo;
+  $('modalComentarioClose').onclick = fecharModalComentario;
+  $('modalComentarioOverlay').onclick = e => { if (e.target.id === 'modalComentarioOverlay') fecharModalComentario(); };
+  $('btnSalvarSelos').onclick = salvarSelos;
+  $('saveNotesBtn').onclick = salvarAnotacoes;
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { fecharModalPublicar(); fecharModalLogin(); fecharModalComentario(); }
+  });
+  // delegação: tags do picker
+  $('tagsPicker').onclick = e => { const b = e.target.closest('.tag-opcao'); if (b) toggleTag(b.dataset.tag); };
+  $('tagsSelecionadas').onclick = e => { const b = e.target.closest('button[data-tag]'); if (b) toggleTag(b.dataset.tag); };
+  // delegação: feed
+  $('articlesContainer').onclick = e => {
+    const like = e.target.closest('.btn-like'); if (like) return toggleLike(like);
+    const com = e.target.closest('.btn-comentar'); if (com) return abrirModalComentario(com.dataset.id, com.dataset.titulo);
+    const ler = e.target.closest('.btn-ler'); if (ler) return alternarLeitura(ler);
+    const tag = e.target.closest('.tag');
+    if (tag) { $('searchInput').value = tag.textContent; renderizarArtigos(); }
+  };
+  // delegação: excluir no perfil
+  $('perfilArtigos').onclick = e => { const b = e.target.closest('.btn-excluir'); if (b) excluirArtigo(b.dataset.id); };
+}
+
+// ── Login ──
+function abrirModalLogin() { $('modalLoginOverlay').classList.add('open'); }
+function fecharModalLogin() { $('modalLoginOverlay').classList.remove('open'); $('formLogin').reset(); $('loginErro').classList.add('hidden'); }
+function mostrarErroLogin(m) { const el = $('loginErro'); el.textContent = m; el.classList.remove('hidden'); }
+async function loginComGoogle() {
+  if (!firebaseReady) return toast('Firebase não configurado ainda.', 'erro');
+  try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); fecharModalLogin(); toast('✅ Login feito!', 'sucesso'); }
+  catch (e) { mostrarErroLogin(erroFirebase(e, 'Login Google')); }
+}
+async function loginComEmail(e) {
+  e.preventDefault();
+  if (!firebaseReady) return toast('Firebase não configurado ainda.', 'erro');
+  const email = $('loginEmail').value.trim(), senha = $('loginSenha').value, novo = !!window._cadastro;
+  try {
+    if (novo) await auth.createUserWithEmailAndPassword(email, senha);
+    else await auth.signInWithEmailAndPassword(email, senha);
+    fecharModalLogin(); toast(novo ? '✅ Conta criada!' : '✅ Bem-vinda de volta!', 'sucesso');
+  } catch (er) {
+    const m = {'auth/user-not-found':'E-mail não cadastrado.','auth/wrong-password':'Senha incorreta.','auth/invalid-credential':'E-mail ou senha incorretos.','auth/email-already-in-use':'E-mail já cadastrado.','auth/weak-password':'Senha fraca (mínimo 6 caracteres).','auth/invalid-email':'E-mail inválido.'};
+    mostrarErroLogin(m[er.code] || erroFirebase(er, 'Login'));
+  }
+}
+async function logout() {
+  if (auth) await auth.signOut();
+  curtidas.clear(); toast('Até logo! 👋'); mostrarView('feed'); renderizarArtigos();
+}
+
+// ── Estatísticas reais ──
+function setStat(id, n) { const el = $(id); if (el) el.textContent = fmt(n); }
+async function carregarEstatisticas() {
+  if (!firebaseReady) { setStat('statArtigos', todosArtigos.length); return; }
+  try {
+    const snap = await db.collection('artigos').get();
+    const autores = new Set(); let leituras = 0;
+    snap.forEach(d => { const a = d.data(); autores.add(a.uid || a.autor || d.id); leituras += a.visualizacoes || 0; });
+    setStat('statArtigos', snap.size); setStat('statLandingArtigos', snap.size);
+    setStat('statAutores', autores.size); setStat('statLeituras', leituras);
+  } catch (e) { erroFirebase(e, 'Estatísticas'); }
+}
+
+// ── Feed ──
+async function carregarArtigos() {
+  $('articlesContainer').innerHTML = '<div class="feed-loading"><div class="spinner"></div><p>Carregando artigos…</p></div>';
+  if (!firebaseReady) { todosArtigos = dadosExemplo(); return renderizarArtigos(); }
+  try {
+    const snap = await db.collection('artigos').orderBy('createdAt','desc').limit(50).get();
+    todosArtigos = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    if (!todosArtigos.length) todosArtigos = dadosExemplo();
+  } catch (e) { erroFirebase(e, 'Carregar artigos'); todosArtigos = dadosExemplo(); }
+  renderizarArtigos();
+}
+function renderizarArtigos() {
+  const q = $('searchInput').value.toLowerCase().trim();
+  let lista = [...todosArtigos];
+  if (q) lista = lista.filter(a => [a.titulo,a.descricao,a.autor,a.materia].some(x => (x||'').toLowerCase().includes(q)) || (a.tags||[]).some(t => t.toLowerCase().includes(q)));
+  $('articlesContainer').innerHTML = lista.length
+    ? lista.map(cardHTML).join('')
+    : '<div class="feed-loading"><p style="font-size:2rem">🔍</p><p>Nenhum artigo encontrado.</p></div>';
+}
+function cardHTML(a, i) {
+  const ini = (a.autor||'?')[0].toUpperCase(), cor = CORES[ini.charCodeAt(0) % CORES.length];
+  const tags = (a.tags||[]).map(t => `<li><button class="tag">${esc(t)}</button></li>`).join('');
+  const n = a.totalComentarios || 0, curtido = curtidas.has(a.id);
+  return `<article class="artigo ${a.destaque?'artigo-destaque':''}" data-id="${a.id}" style="animation-delay:${i*0.05}s">
+    <div class="artigo-header">
+      <div class="artigo-autor"><div class="mini-avatar" style="background:${cor}">${ini}</div>
+        <div><span class="autor-nome">${esc(a.autor||'Anônimo')}</span><span class="artigo-data">${formatarData(a.createdAt)}</span></div></div>
+      <span class="artigo-materia">${esc(a.materia||'')}</span>
+    </div>
+    <h2 class="artigo-titulo">${esc(a.titulo||'')}</h2>
+    <p class="artigo-descricao">${esc(a.descricao||'')}</p>
+    ${a.conteudo ? `<div class="artigo-conteudo hidden">${esc(a.conteudo)}</div>` : ''}
+    ${tags ? `<ul class="tags">${tags}</ul>` : ''}
+    <div class="artigo-footer">
+      <div class="artigo-meta">
+        <button class="btn-like ${curtido?'curtido':''}" data-id="${a.id}">${curtido?'❤️':'🤍'} <span class="like-num">${a.likes||0}</span></button>
+        <button class="btn-comentar" data-id="${a.id}" data-titulo="${esc(a.titulo||'')}">💬 ${n} comentário${n!==1?'s':''}</button>
+      </div>
+      ${a.conteudo ? '<button class="btn btn-sm btn-ler">Ler artigo ↓</button>' : ''}
+    </div></article>`;
+}
+function alternarLeitura(btn) {
+  const card = btn.closest('.artigo'), cont = card.querySelector('.artigo-conteudo'); if (!cont) return;
+  const aberto = !cont.classList.contains('hidden');
+  cont.classList.toggle('hidden', aberto); card.classList.toggle('artigo-expandido', !aberto);
+  btn.textContent = aberto ? 'Ler artigo ↓' : 'Fechar ↑';
+  const id = card.dataset.id;
+  if (!aberto && !leiturasSessao.has(id) && firebaseReady && !id.startsWith('ex') && !id.startsWith('local_')) {
+    leiturasSessao.add(id);
+    const art = todosArtigos.find(a => a.id === id); if (art) art.visualizacoes = (art.visualizacoes||0) + 1;
+    db.collection('artigos').doc(id).update({visualizacoes: firebase.firestore.FieldValue.increment(1)}).then(carregarEstatisticas).catch(() => {});
+  }
+}
+
+// ── Curtidas ──
+async function carregarCurtidasUsuario() {
+  if (!firebaseReady || !usuarioAtual) return;
+  try {
+    const snap = await db.collection('curtidas').where('uid','==',usuarioAtual.uid).get();
+    curtidas = new Set(snap.docs.map(d => d.data().artigoId)); renderizarArtigos();
+  } catch (e) { erroFirebase(e, 'Curtidas'); }
+}
+async function toggleLike(btn) {
+  if (!usuarioAtual) { abrirModalLogin(); return toast('Entre para curtir 💜'); }
+  const id = btn.dataset.id, ja = curtidas.has(id), delta = ja ? -1 : 1;
+  const novoN = Math.max(0, (parseInt(btn.querySelector('.like-num').textContent)||0) + delta);
+  btn.innerHTML = `${ja?'🤍':'❤️'} <span class="like-num">${novoN}</span>`;
+  btn.classList.toggle('curtido', !ja);
+  ja ? curtidas.delete(id) : curtidas.add(id);
+  const art = todosArtigos.find(a => a.id === id); if (art) art.likes = novoN;
+  if (firebaseReady && !id.startsWith('ex') && !id.startsWith('local_')) {
+    try {
+      const ref = db.collection('curtidas');
+      if (ja) { const s = await ref.where('uid','==',usuarioAtual.uid).where('artigoId','==',id).get(); s.forEach(d => d.ref.delete()); }
+      else await ref.add({uid:usuarioAtual.uid, artigoId:id, createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+      await db.collection('artigos').doc(id).update({likes: firebase.firestore.FieldValue.increment(delta)});
+    } catch (e) { erroFirebase(e, 'Curtida'); }
+  }
+}
+
+// ── Comentários (salvos em artigos/{id}/comentarios) ──
+async function abrirModalComentario(id, titulo) {
+  artigoComentandoId = id;
+  $('modalComentarioTituloArtigo').textContent = titulo;
+  $('modalComentarioOverlay').classList.add('open');
+  $('modalComentariosLista').innerHTML = '<div class="feed-loading"><div class="spinner" style="width:24px;height:24px;border-width:2px;margin:10px auto"></div></div>';
+  const f = $('modalComentarioForm');
+  if (usuarioAtual) {
+    const nome = usuarioAtual.displayName || usuarioAtual.email || '?', ini = nome[0].toUpperCase();
+    f.innerHTML = `<form id="formComentario" style="margin-top:12px"><div class="comentario-input-wrap">
+      <div class="mini-avatar" style="background:${usuarioAtual.photoURL?'transparent':CORES[ini.charCodeAt(0)%CORES.length]}">${avatarHTML(nome, usuarioAtual.photoURL)}</div>
+      <input type="text" class="input-base comentario-input" id="inputComentario" placeholder="Escreva um comentário…" maxlength="500" autocomplete="off">
+      <button type="submit" class="btn btn-destaque btn-sm">Enviar</button></div></form>`;
+    $('formComentario').onsubmit = enviarComentario;
+    setTimeout(() => $('inputComentario')?.focus(), 100);
+  } else {
+    f.innerHTML = '<p class="aviso-login-comentario"><button class="link-btn" id="btnLoginComent">Entre na sua conta</button> para comentar.</p>';
+    $('btnLoginComent').onclick = abrirModalLogin;
+  }
+  carregarComentarios(id);
+}
+function fecharModalComentario() { $('modalComentarioOverlay').classList.remove('open'); artigoComentandoId = null; }
+function comentariosHTML(arr) {
+  return arr.map(c => {
+    const ini = (c.autor||'?')[0].toUpperCase();
+    return `<div class="comentario-item"><div class="mini-avatar" style="background:${c.fotoURL?'transparent':CORES[ini.charCodeAt(0)%CORES.length]};width:32px;height:32px;font-size:.78rem">${avatarHTML(c.autor, c.fotoURL)}</div>
+      <div class="comentario-corpo"><div class="comentario-meta"><strong>${esc(c.autor||'Anônimo')}</strong><span>${formatarData(c.createdAt)}</span></div><p>${esc(c.texto||'')}</p></div></div>`;
+  }).join('');
+}
+async function carregarComentarios(id) {
+  const lista = $('modalComentariosLista');
+  if (!firebaseReady || id.startsWith('ex')) {
+    lista.innerHTML = comentariosHTML([{autor:'Mariana Lima', texto:'Adorei esse resumo! 💜', createdAt:new Date()}, {autor:'Pedro Alves', texto:'Me ajudou muito na prova!', createdAt:new Date()}]);
+    return;
+  }
+  try {
+    const snap = await db.collection('artigos').doc(id).collection('comentarios').orderBy('createdAt','asc').limit(50).get();
+    lista.innerHTML = snap.empty ? '<p class="sem-comentarios">Seja a primeira a comentar! 🌟</p>' : comentariosHTML(snap.docs.map(d => d.data()));
+  } catch (e) { erroFirebase(e, 'Comentários'); lista.innerHTML = '<p class="sem-comentarios">Erro ao carregar comentários.</p>'; }
+}
+async function enviarComentario(e) {
+  e.preventDefault();
+  const input = $('inputComentario'), texto = input.value.trim(); if (!texto) return;
+  const btn = e.target.querySelector('button[type=submit]'); btn.disabled = true;
+  const id = artigoComentandoId;
+  const c = {autor: usuarioAtual.displayName || usuarioAtual.email?.split('@')[0] || 'Anônimo', fotoURL: usuarioAtual.photoURL || null, uid: usuarioAtual.uid, texto, createdAt: new Date()};
+  if (firebaseReady && !id.startsWith('ex') && !id.startsWith('local_')) {
+    try {
+      await db.collection('artigos').doc(id).collection('comentarios').add({...c, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+      await db.collection('artigos').doc(id).update({totalComentarios: firebase.firestore.FieldValue.increment(1)});
+    } catch (er) { erroFirebase(er, 'Comentário'); btn.disabled = false; return; }
+  } else toast('Artigo de exemplo: o comentário não é salvo no banco');
+  const lista = $('modalComentariosLista');
+  lista.querySelector('.sem-comentarios')?.remove();
+  lista.insertAdjacentHTML('beforeend', comentariosHTML([c]));
+  lista.lastElementChild?.scrollIntoView({behavior:'smooth', block:'nearest'});
+  const art = todosArtigos.find(a => a.id === id);
+  if (art) {
+    art.totalComentarios = (art.totalComentarios||0) + 1;
+    const b = document.querySelector(`.btn-comentar[data-id="${id}"]`);
+    if (b) b.textContent = `💬 ${art.totalComentarios} comentário${art.totalComentarios!==1?'s':''}`;
+  }
+  input.value = ''; btn.disabled = false;
+  if (!id.startsWith('ex')) toast('💬 Comentário publicado!', 'sucesso');
+}
+
+// ── Publicar ──
+function montarSelectMateria() { $('inputMateria').innerHTML += MATERIAS.map(m => `<option>${m}</option>`).join(''); }
+function abrirModalPublicar() {
+  tagsSel = new Set();
+  $('tagsPicker').innerHTML = TAGS.map(t => `<button type="button" class="tag-opcao" data-tag="${esc(t)}">${esc(t)}</button>`).join('');
+  desenharTagsSel(); $('modalOverlay').classList.add('open'); $('inputTitulo').focus();
+}
+function fecharModalPublicar() { $('modalOverlay').classList.remove('open'); $('formPublicar').reset(); tagsSel = new Set(); }
+function toggleTag(t) {
+  tagsSel.has(t) ? tagsSel.delete(t) : tagsSel.add(t);
+  document.querySelectorAll('#tagsPicker .tag-opcao').forEach(b => b.classList.toggle('selecionada', tagsSel.has(b.dataset.tag)));
+  desenharTagsSel();
+}
+function desenharTagsSel() {
+  $('tagsSelecionadas').innerHTML = tagsSel.size
+    ? [...tagsSel].map(t => `<span class="tag-pill">${esc(t)}<button type="button" data-tag="${esc(t)}" title="Remover">×</button></span>`).join('')
+    : '<span class="tags-placeholder">Nenhuma tag selecionada</span>';
+}
+async function publicarArtigo(e) {
+  e.preventDefault();
+  const btn = $('btnPublicarSubmit');
+  const a = {
+    titulo: $('inputTitulo').value.trim(), descricao: $('inputDescricao').value.trim(), conteudo: $('inputConteudo').value.trim(),
+    materia: $('inputMateria').value, autor: $('inputAutor').value.trim() || 'Anônimo', uid: usuarioAtual?.uid || null,
+    tags: [...tagsSel], likes: 0, totalComentarios: 0, visualizacoes: 0, createdAt: new Date()
+  };
+  if (!a.titulo || !a.descricao || !a.materia) return toast('Preencha os campos obrigatórios!', 'erro');
+  btn.disabled = true; btn.textContent = 'Publicando…';
+  if (firebaseReady) {
+    try {
+      const ref = await db.collection('artigos').add({...a, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+      a.id = ref.id; toast('✅ Artigo publicado!', 'sucesso');
+    } catch (er) { erroFirebase(er, 'Publicar'); btn.disabled = false; btn.textContent = '🚀 Publicar agora'; return; }
+  } else { a.id = 'local_' + Date.now(); toast('✅ Artigo adicionado (Firebase offline)', 'sucesso'); }
+  if (todosArtigos.every(x => x.id.startsWith('ex'))) todosArtigos = [];
+  todosArtigos.unshift(a);
+  renderizarArtigos(); carregarEstatisticas(); fecharModalPublicar();
+  btn.disabled = false; btn.textContent = '🚀 Publicar agora';
+}
+
+// ── PERFIL ──
+function montarSelosGrid() {
+  $('selosGrid').innerHTML = SELOS.map(([n, ic], i) => `<div class="selo-opcao"><input type="checkbox" id="selo${i}" value="${n}"><label for="selo${i}"><span class="selo-icone">${ic}</span><span class="selo-nome">${n}</span></label></div>`).join('');
+}
+function carregarPerfil() {
+  if (!usuarioAtual) return;
+  const nome = usuarioAtual.displayName || usuarioAtual.email?.split('@')[0] || 'Usuário';
+  $('perfilNome').textContent = nome; $('perfilEmail').textContent = usuarioAtual.email || '';
+  $('avatarPerfil').innerHTML = avatarHTML(nome, usuarioAtual.photoURL);
+  carregarSelos(); carregarArtigosPerfil(); carregarAnotacoes();
+}
+function desenharSelos(selos) {
+  $('perfilSelos').innerHTML = selos.length ? selos.map(s => `<span class="selo">${iconeDe(s)} ${esc(s)}</span>`).join('') : '<span class="selo-vazio">Nenhum selo ainda. Escolha abaixo 👇</span>';
+  $('sideSelos').innerHTML = selos.map(s => `<span class="badge">${esc(s)}</span>`).join('');
+  document.querySelectorAll('#selosGrid input').forEach(i => i.checked = selos.includes(i.value));
+}
+async function carregarSelos() {
+  if (!firebaseReady) return desenharSelos([]);
+  try { const d = await db.collection('usuarios').doc(usuarioAtual.uid).get(); desenharSelos(d.exists ? (d.data().selos || []) : []); }
+  catch (e) { erroFirebase(e, 'Carregar selos'); }
+}
+async function salvarSelos() {
+  if (!usuarioAtual) return toast('Entre na sua conta primeiro', 'erro');
+  const btn = $('btnSalvarSelos'), selos = [...document.querySelectorAll('#selosGrid input:checked')].map(i => i.value);
+  btn.disabled = true;
+  try { await db.collection('usuarios').doc(usuarioAtual.uid).set({selos}, {merge:true}); desenharSelos(selos); toast('🏷️ Selos salvos!', 'sucesso'); }
+  catch (e) { erroFirebase(e, 'Salvar selos'); }
+  btn.disabled = false;
+}
+async function carregarArtigosPerfil() {
+  const box = $('perfilArtigos');
+  if (!firebaseReady) { box.innerHTML = '<p class="aviso">Banco offline.</p>'; return; }
+  try {
+    const snap = await db.collection('artigos').where('uid','==',usuarioAtual.uid).get();
+    if (snap.empty) { box.innerHTML = '<p class="aviso">Você ainda não publicou nenhum artigo. Clique em "+ Publicar"! ✍️</p>'; return; }
+    const lista = snap.docs.map(d => ({id:d.id, ...d.data()})).sort((a,b) => (b.createdAt?.toMillis?.()||0) - (a.createdAt?.toMillis?.()||0));
+    box.innerHTML = lista.map(a => `<article class="artigo-p">
+      <div class="artigo-p-topo"><h3>${esc(a.titulo||'Sem título')}</h3>${a.materia?`<span class="artigo-materia">${esc(a.materia)}</span>`:''}</div>
+      <p>${esc(a.descricao||'Sem descrição')}</p>
+      <div class="artigo-p-meta"><span>📅 ${formatarData(a.createdAt)}</span><span>❤️ ${a.likes||0}</span><span>💬 ${a.totalComentarios||0}</span><span>👁️ ${a.visualizacoes||0}</span>
+        <button class="btn-excluir" data-id="${a.id}">🗑️ Excluir</button></div></article>`).join('');
+  } catch (e) { erroFirebase(e, 'Meus artigos'); box.innerHTML = '<p class="aviso">Não foi possível buscar seus artigos.</p>'; }
+}
+async function excluirArtigo(id) {
+  if (!confirm('Excluir este artigo? Essa ação não pode ser desfeita.')) return;
+  try {
+    await db.collection('artigos').doc(id).delete();
+    todosArtigos = todosArtigos.filter(a => a.id !== id);
+    toast('Artigo excluído', 'sucesso'); carregarArtigosPerfil(); renderizarArtigos(); carregarEstatisticas();
+  } catch (e) { erroFirebase(e, 'Excluir'); }
+}
+async function carregarAnotacoes() {
+  if (!firebaseReady) return;
+  try { const d = await db.collection('agendas').doc(usuarioAtual.uid).get(); $('notesTextarea').value = d.exists ? (d.data().notas || '') : ''; }
+  catch (e) { erroFirebase(e, 'Carregar anotações'); }
+}
+async function salvarAnotacoes() {
+  if (!usuarioAtual) return toast('Entre na sua conta primeiro', 'erro');
+  const btn = $('saveNotesBtn'); btn.disabled = true;
+  try { await db.collection('agendas').doc(usuarioAtual.uid).set({notas:$('notesTextarea').value, atualizadoEm:firebase.firestore.FieldValue.serverTimestamp()}); toast('📒 Anotações salvas!', 'sucesso'); }
+  catch (e) { erroFirebase(e, 'Salvar anotações'); }
+  btn.disabled = false;
+}
+
+// ── Dados de exemplo (só aparecem se o banco estiver vazio) ──
+function dadosExemplo() {
+  return [
+    {id:'ex1', titulo:'Guia completo de funções do 2º grau para o ENEM', descricao:'Entenda parábolas, vértice, delta e as propriedades que mais caem nas provas.',
+     conteudo:'f(x) = ax² + bx + c, com a ≠ 0.\n\n📐 Vértice: V = (-b/2a, -Δ/4a)\n📌 Delta: Δ = b² - 4ac\n• Δ > 0 → duas raízes reais\n• Δ = 0 → uma raiz real\n• Δ < 0 → sem raízes reais\n\na > 0 → abre para cima | a < 0 → abre para baixo',
+     materia:'Matemática', autor:'Carlos Menezes', tags:['ENEM','Fórmulas'], likes:48, destaque:true, createdAt:new Date('2026-05-28'), totalComentarios:2},
+    {id:'ex2', titulo:'Como escrever uma redação nota 1000 no ENEM', descricao:'Dicas de estrutura, coesão, coerência e proposta de intervenção.',
+     conteudo:'1️⃣ Introdução: tema e tese clara\n2️⃣ Desenvolvimento: 2 parágrafos com argumentos e dados\n3️⃣ Conclusão: agente + ação + meio + finalidade + detalhamento',
+     materia:'Português', autor:'Mariana Lima', tags:['Redação','ENEM'], likes:36, createdAt:new Date('2026-05-27'), totalComentarios:0},
+    {id:'ex3', titulo:'Fotossíntese e respiração celular: diferenças', descricao:'Resumo didático dos dois processos mais cobrados em Biologia.',
+     conteudo:'🌱 Fotossíntese: cloroplastos | 6CO₂ + 6H₂O + luz → C₆H₁₂O₆ + 6O₂\n🔥 Respiração: mitocôndrias | C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + ATP',
+     materia:'Biologia', autor:'Pedro Alves', tags:['Citologia','Resumo'], likes:29, createdAt:new Date('2026-05-26'), totalComentarios:0}
+  ];
+}
+</script>
+</body>
+</html>
